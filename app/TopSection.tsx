@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, ScrollView, View } from 'react-native';
+import { StyleSheet, ScrollView, View, Text } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 
@@ -27,23 +27,27 @@ export default function TopSection({ expression, result, history, isDarkTheme }:
       </View>
 
       <View style={styles.currentExpressionContainer}>
-        <ThemedText 
-          style={styles.currentExpression} 
-          isDarkTheme={isDarkTheme} 
-          lightColor="#000000" 
-          darkColor="#FFFFFF"
+        <Text
+          style={[
+            styles.currentExpression,
+            isDarkTheme ? { color: '#FFFFFF' } : { color: '#000000' },
+          ]}
+          adjustsFontSizeToFit
+          numberOfLines={1}
         >
           {expression}
-        </ThemedText>
+        </Text>
         {result !== '' && (
-          <ThemedText 
-            style={styles.result} 
-            isDarkTheme={isDarkTheme} 
-            lightColor="#000000" 
-            darkColor="#FFFFFF"
+          <Text
+            style={[
+              styles.result,
+              isDarkTheme ? { color: '#FFFFFF' } : { color: '#000000' },
+            ]}
+            adjustsFontSizeToFit
+            numberOfLines={1}
           >
             {result}
-          </ThemedText>
+          </Text>
         )}
       </View>
     </ThemedView>
@@ -95,6 +99,7 @@ const styles = StyleSheet.create({
   currentExpression: {
     fontSize: 40,
     textAlign: 'right',
-    marginBottom: 10,
+    minWidth: 60,
+    minHeight: 60,
   },
 });

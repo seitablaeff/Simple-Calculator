@@ -75,6 +75,301 @@ const styles = StyleSheet.create({
 });
 
 
+BottomSection.tsx
+import React from 'react';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+
+const buttons = [
+  ['AC', '⌫', '%', '÷'],
+  ['7', '8', '9', 'x'],
+  ['4', '5', '6', '-'],
+  ['1', '2', '3', '+'],
+  ['T', '0', '.', '='],
+];
+
+interface BottomSectionProps {
+  onButtonPress: (buttonText: string) => void;
+  isDarkTheme: boolean;
+}
+
+export default function BottomSection({ onButtonPress, isDarkTheme }: BottomSectionProps) {
+  return (
+    <View style={[styles.buttonContainer, isDarkTheme && styles.darkContainer]}>
+      {buttons.map((row, rowIndex) => (
+        <View key={rowIndex} style={styles.row}>
+          {row.map((buttonText, buttonIndex) => (
+            <TouchableOpacity
+              key={buttonIndex}
+              style={[
+                styles.button,
+                buttonText === '0' ? styles.zeroButton : null,
+                buttonText === '=' ? styles.equalButton : null,
+              ]}
+              onPress={() => onButtonPress(buttonText)}
+            >
+              <ThemedText
+                isDarkTheme={isDarkTheme}
+                style={[
+                  styles.text,
+                  buttonText === '=' ? styles.equalButtonText : null,
+                  ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.'].includes(buttonText) ? styles.numberText : styles.otherText
+                ]}
+                lightColor="#000000"
+                darkColor="#FFFFFF"
+              >
+                {buttonText}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  buttonContainer: {
+    flex: 3,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 12,
+  },
+  darkContainer: {
+    backgroundColor: '#1e1e1e',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    width: '100%',
+    height: '20%',
+  },
+  button: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 0,
+  },
+  text: {
+    fontSize: 27,
+    textAlign: 'center',
+  },
+  equalButtonText: {
+    color: '#000000',
+  },
+  zeroButton: {},
+  numberText: {},
+  otherText: {
+    color: '#ffa500',
+  },
+  equalButton: {},
+});
+
+
+index.tsx
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { ThemedView } from '@/components/ThemedView';
+import TopSection from './TopSection';
+import BottomSection from './BottomSection';
+
+export default function HomeScreen() {
+  const [expression, setExpression] = useState('');
+  const [result, setResult] = useState('');
+  const [history, setHistory] = useState<string[]>([]);
+  const [isNewInput, setIsNewInput] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+
+  const handleButtonPress = (buttonText: string) => {
+    if (buttonText === '=') {
+      calculateResult();
+    } else if (buttonText === 'AC') {
+      clear();
+    } else if (buttonText === '⌫') {
+      backspace();
+    } else if (buttonText === '%') {
+      findPercent();
+    } else if (buttonText === 'T') {
+      toggleTheme();
+    } else {
+      if (isNewInput) {
+        setExpression(buttonText);
+        setIsNewInput(false);
+      } else {
+        setExpression((prev) => prev + buttonText);
+      }
+      setResult('');
+    }
+  };
+
+  const calculateResult = () => {
+    try {
+      const evaluatedResult = eval(expression.replace('x', '*').replace('÷', '/'));
+      setHistory((prev) => [...prev, `${expression} = ${evaluatedResult}`]);
+      setExpression(evaluatedResult.toString());
+      setResult('');
+      setIsNewInput(true);
+    } catch (error) {
+      setResult('Error');
+    }
+  };
+
+  const clear = () => {
+    setExpression('');
+    setResult('');
+    setHistory([]);
+  };
+
+  const backspace = () => {
+    setExpression((prev) => prev.slice(0, -1));
+  };
+
+  const findPercent = () => {
+    try {
+      const evaluatedResult = eval(expression.replace('x', '*').replace('÷', '/')) / 100;
+      setExpression(evaluatedResult.toString());
+    } catch (error) {
+      setResult('Error');
+    }
+  };
+
+  const toggleTheme = () => {
+    setIsDarkTheme((prev) => !prev);
+  };
+
+  return (
+    <ThemedView style={[styles.container, isDarkTheme && styles.darkContainer]}>
+      <TopSection 
+        expression={expression} 
+        result={result} 
+        history={history} 
+        isDarkTheme={isDarkTheme} 
+      />
+      <BottomSection 
+        onButtonPress={handleButtonPress} 
+        isDarkTheme={isDarkTheme} 
+      />
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor: '#ffffff',
+  },
+  darkContainer: {
+    backgroundColor: '#1e1e1e',
+  },
+});
+
+
+TopSection.tsx
+import React from 'react';
+import { StyleSheet, ScrollView, View } from 'react-native';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+
+interface TopSectionProps {
+  expression: string;
+  result: string;
+  history: string[];
+  isDarkTheme: boolean;
+}
+
+export default function TopSection({ expression, result, history, isDarkTheme }: TopSectionProps) {
+  return (
+    <ThemedView style={[styles.topSection, isDarkTheme && styles.darkSection]}>
+      <View style={styles.historyWrapper}>
+        <ScrollView
+          style={styles.historyContainer}
+          contentContainerStyle={styles.historyContentContainer}
+        >
+          {history.map((item, index) => (
+            <ThemedText key={index} style={styles.historyText} isDarkTheme={isDarkTheme} lightColor="#d1d1d1" darkColor="#d1d1d1">
+              {item}
+            </ThemedText>
+          ))}
+        </ScrollView>
+      </View>
+
+      <View style={styles.currentExpressionContainer}>
+        <ThemedText 
+          style={styles.currentExpression} 
+          isDarkTheme={isDarkTheme} 
+          lightColor="#000000" 
+          darkColor="#FFFFFF"
+        >
+          {expression}
+        </ThemedText>
+        {result !== '' && (
+          <ThemedText 
+            style={styles.result} 
+            isDarkTheme={isDarkTheme} 
+            lightColor="#000000" 
+            darkColor="#FFFFFF"
+          >
+            {result}
+          </ThemedText>
+        )}
+      </View>
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  topSection: {
+    height: '40%',
+    backgroundColor: '#ffffff',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#d3d3d3',
+  },
+  darkSection: {
+    backgroundColor: '#1e1e1e',
+  },
+  historyWrapper: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    marginBottom: 15,
+  },
+  historyText: {
+    fontSize: 20,
+    color: '#d1d1d1',
+    textAlign: 'right',
+  },
+  result: {
+    fontSize: 26,
+    textAlign: 'right',
+  },
+  historyContainer: {
+    width: '100%',
+    paddingHorizontal: 10,
+  },
+  historyContentContainer: {
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    flexGrow: 1,
+  },
+  currentExpressionContainer: {
+    width: '100%',
+    paddingHorizontal: 10,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+  },
+  currentExpression: {
+    fontSize: 40,
+    textAlign: 'right',
+    marginBottom: 10,
+  },
+});
+
+
 _layout.tsx
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -107,41 +402,5 @@ export default function RootLayout() {
     </Stack>
   );
 }
-
-
-index.tsx
-import { Image, StyleSheet, Platform } from 'react-native';
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-
-export default function HomeScreen() {
-  return (
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
 
 
