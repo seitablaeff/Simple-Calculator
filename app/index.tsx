@@ -12,6 +12,8 @@ export default function HomeScreen() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   const handleButtonPress = (buttonText: string) => {
+    const operators = ['+', '-', 'x', '÷'];
+
     if (buttonText === '=') {
       calculateResult();
     } else if (buttonText === 'AC') {
@@ -23,19 +25,31 @@ export default function HomeScreen() {
     } else if (buttonText === 'T') {
       toggleTheme();
     } else {
-      if (isNewInput) {
-        setExpression(buttonText);
-        setIsNewInput(false);
+      // Проверка последовательных операторов
+      if (operators.includes(buttonText)) {
+        if (operators.includes(expression.slice(-1))) {
+          // Заменяем последний оператор новым
+          setExpression(prev => prev.slice(0, -1) + buttonText);
+        } else {
+          setExpression(prev => prev + buttonText);
+        }
       } else {
-        setExpression((prev) => prev + buttonText);
+        if (isNewInput) {
+          setExpression(buttonText);
+          setIsNewInput(false);
+        } else {
+          setExpression(prev => prev + buttonText);
+        }
+        setResult('');
       }
-      setResult('');
     }
   };
 
   const calculateResult = () => {
     try {
-      const evaluatedResult = eval(expression.replace('x', '*').replace('÷', '/'));
+      // Если последний символ - оператор, удаляем его
+      const finalExpression = expression.replace(/[\+\-x÷]$/, '');
+      const evaluatedResult = eval(finalExpression.replace('x', '*').replace('÷', '/'));
       setHistory((prev) => [...prev, `${expression} = ${evaluatedResult}`]);
       setExpression(evaluatedResult.toString());
       setResult('');
@@ -57,7 +71,8 @@ export default function HomeScreen() {
 
   const findPercent = () => {
     try {
-      const evaluatedResult = eval(expression.replace('x', '*').replace('÷', '/')) / 100;
+      const finalExpression = expression.replace(/[\+\-x÷]$/, '');
+      const evaluatedResult = eval(finalExpression.replace('x', '*').replace('÷', '/')) / 100;
       setExpression(evaluatedResult.toString());
     } catch (error) {
       setResult('Error');

@@ -19,7 +19,7 @@ export default function TopSection({ expression, result, history, isDarkTheme }:
           contentContainerStyle={styles.historyContentContainer}
         >
           {history.map((item, index) => (
-            <ThemedText key={index} style={styles.historyText} isDarkTheme={isDarkTheme} lightColor="#d1d1d1" darkColor="#d1d1d1">
+            <ThemedText key={index} style={styles.historyText} isDarkTheme={isDarkTheme} lightColor="#f0f0f0" darkColor="#292929">
               {item}
             </ThemedText>
           ))}
